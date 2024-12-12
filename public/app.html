@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sanghaya - because finding sources should be easy.</title>
+  <link href="quill.snow.css" rel="stylesheet"/>
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet"/>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="icon" href="assets/sanghayalogo.png">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Added Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    body {
+      font-family: 'Poppins';
+      margin: 0;
+      background: #fff;
+      color: #333;
+    }
+
+    .three-column-container {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+
+    .three-column-container .column {
+      box-sizing: border-box;
+      padding: 20px;
+      min-height: 400px;
+    }
+
+    .three-column-container .column:nth-child(1) {
+      width: 20%;
+      border: none;
+      background: #f9f9f9;
+      overflow-y: auto;
+    }
+
+    .three-column-container .column:nth-child(2) {
+      position: relative;
+      width: 60%;
+      padding: 0px !important;
+      border: none;
+      background: #fff;
+    }
+
+    .three-column-container .column:nth-child(3) {
+      width: 20%;
+      background: #f9f9f9;
+      overflow-y: auto;
+    }
+
+    #editor {
+      border: 1px solid #ccc;
+      min-height: 200px;
+      padding: 10px;
+      background: #fff;
+      margin-top: 20px;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .highlight-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 8px 12px;
+      background: #980000;
+      color: #fff;
+      border:none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 9999;
+      transition: .6s;
+    }
+
+    .highlight-btn:disabled {
+      background: #797979;
+      cursor: not-allowed;
+      transition: .6s;
+    }
+
+    .highlight-btn:hover:enabled {
+      background: #b71c1c;
+    }
+
+    #resultsWindow {
+      display: block;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      margin-top: 20px;
+    }
+
+    #resultsWindow h3 {
+      margin-top: 0;
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #C62828;
+    }
+
+    #closeResults {
+      float: right;
+      cursor: pointer;
+      color: #999;
+      font-size: 14px;
+    }
+
+    #closeResults:hover {
+      color: #333;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ddd;
+      border-top: 2px solid #C62828;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 5px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      color: #C62828;
+    }
+
+    .paper-result {
+      margin-bottom: 15px;
+    }
+
+    .paper-result a {
+      color: #C62828;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .paper-result a:hover {
+      text-decoration: underline;
+    }
+
+    .paper-meta {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .paper-authors {
+      font-size: 12px;
+      color: #333;
+      margin-top: 3px;
+    }
+
+    .cite-button {
+      display: inline-block;
+      margin-top: 5px;
+      padding: 5px 8px;
+      background: #C62828;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .cite-button:hover {
+      background: #b71c1c;
+    }
+
+    .doc-list {
+      margin-top: 5px;
+    }
+
+    .doc-item {
+      position: relative;
+      padding-right: 20px;
+      cursor: pointer;
+      color: #4C4C4C;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .doc-item i {
+      margin-right: 8px;
+    }
+
+    .doc-item:hover {
+      background: #ececec;
+    }
+
+    .delete-icon {
+      position: absolute;
+      right: 0;
+      top: 0;
+      padding: 0 5px;
+      color: #999;
+      cursor: pointer;
+      display: none;
+      font-weight: bold;
+    }
+
+    .doc-item:hover .delete-icon {
+      display: inline;
+    }
+
+    .delete-icon:hover {
+      color: #C62828;
+    }
+
+    .active {
+      background: #ececec;
+      padding-left: 30px;
+      transition: .6s;
+      color: darkred;
+    }
+
+    .cke_button__savedoc_icon {
+      background-image: none !important;
+      position: relative;
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;
+      border: none !important;
+    }
+
+    #cke_1_contents {
+      height: 90vh !important;
+    }
+    .cke_notification_warning {
+      display: none !important;
+    }
+
+    .cke_button__savedoc_icon::before {
+      color: red;
+      content: "\f0c7";
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="three-column-container">
+    <div class="column">
+      <h2 style="margin-top: 0px;">Sanghaya</h2>
+      <h4 style="padding: 0; color: #595959; margin: 0; font-weight: 700; font-size: 15px;">DOCUMENTS</h4>
+      <hr style="border-top: 1px solid #d0d0d0;">
+      <div class="doc-list" id="documentList"></div>
+      <p style="position: absolute; font-size: 14px; bottom: 0px;">Made with love by <a href="https://github.com/vonuyvicoo" style="color: red; text-decoration: none;">Von Uyvico.</a></p>
+    </div>
+    <div class="column">
+      <!-- Search button positioned on upper right -->
+      <button class="highlight-btn" id="searchBtn" disabled>Search <i class="fa-solid fa-magnifying-glass"></i></button>
+      <div id="editor">
+        <p>Magic starts here. Highlight some text to search for citations.</p>
+      </div>
+    </div>
+    <div class="column">
+      <h3 style="margin-top: 0px;">Citations</h3>
+      <div id="resultsWindow" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+  <script>
+    let currentDocName = null;
+
+    function getSavedDocuments() {
+      const docs = JSON.parse(localStorage.getItem('documents') || '[]');
+      return docs;
+    }
+
+    function saveDocument(name, content) {
+      const docs = getSavedDocuments();
+      const existingIndex = docs.findIndex(d => d.name === name);
+      if (existingIndex >= 0) {
+        docs[existingIndex].content = content;
+      } else {
+        docs.push({ name, content });
+      }
+      localStorage.setItem('documents', JSON.stringify(docs));
+    }
+
+    function loadDocument(name) {
+      const docs = getSavedDocuments();
+      const doc = docs.find(d => d.name === name);
+      return doc ? doc.content : null;
+    }
+
+    function deleteDocument(name) {
+      let docs = getSavedDocuments();
+      docs = docs.filter(d => d.name !== name);
+      localStorage.setItem('documents', JSON.stringify(docs));
+    }
+
+    function refreshDocumentList(editorInstance) {
+      const docListContainer = document.getElementById('documentList');
+      docListContainer.innerHTML = '';
+      const docs = getSavedDocuments();
+      docs.forEach(doc => {
+        const div = document.createElement('div');
+        div.className = 'doc-item';
+        div.innerHTML = `<i class="fa-solid fa-file"></i> ${doc.name}`;
+
+        div.addEventListener('click', () => {
+          const content = loadDocument(doc.name);
+          if (content !== null) {
+            editorInstance.setData(content);
+            currentDocName = doc.name;
+            const docItems = document.querySelectorAll('.doc-item');
+            docItems.forEach(item => {
+              if (item.innerText.includes(doc.name)) {
+                item.classList.add('active');
+              } else {
+                item.classList.remove('active');
+              }
+            });
+          }
+        });
+
+        const deleteIcon = document.createElement('span');
+        deleteIcon.className = 'delete-icon';
+        deleteIcon.textContent = '×';
+        deleteIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const confirmDelete = confirm(`Are you sure you want to delete "${doc.name}"?`);
+          if (confirmDelete) {
+            deleteDocument(doc.name);
+            if (currentDocName === doc.name) {
+              currentDocName = null;
+              editorInstance.setData('<p>Magic starts here. Highlight some text to search for citations.</p>');
+            }
+            refreshDocumentList(editorInstance);
+          }
+        });
+
+        div.appendChild(deleteIcon);
+        docListContainer.appendChild(div);
+      });
+    }
+  </script>
+
+  <script>
+    const citedReferences = [];
+
+    function formatAuthorsForCitation(authors) {
+      if (!authors || authors.length === 0) {
+        return '';
+      }
+      const lastNames = authors.map(a => {
+        const parts = a.name.trim().split(' ');
+        return parts[parts.length - 1];
+      });
+
+      if (lastNames.length === 1) {
+        return lastNames[0];
+      } else if (lastNames.length === 2) {
+        return `${lastNames[0]} & ${lastNames[1]}`;
+      } else {
+        return `${lastNames[0]} et al.`;
+      }
+    }
+
+    function formatAuthorsForReference(authors) {
+      if (!authors || authors.length === 0) return '';
+      let formatted = authors.map(a => {
+        const parts = a.name.trim().split(' ');
+        const lastName = parts.pop();
+        const initials = parts.map(p => p.charAt(0).toUpperCase() + '.').join(' ');
+        return `${lastName}, ${initials}`.trim();
+      });
+      if (formatted.length > 1) {
+        const lastAuthor = formatted.pop();
+        return formatted.join(', ') + ', & ' + lastAuthor;
+      }
+      return formatted[0];
+    }
+
+    function generateReferenceEntry(paper) {
+      const authorsStr = formatAuthorsForReference(paper.authors);
+      const year = paper.year ? `(${paper.year}).` : '(n.d.).';
+      const title = paper.title || 'No title';
+      const url = paper.url || '';
+      return `${authorsStr} ${year} ${title}. ${url}`.trim();
+    }
+
+    function updateReferencesSection(editorInstance) {
+      let editorData = editorInstance.getData();
+      const refHeadingRegex = /<h2>References<\/h2>.*$/is;
+      editorData = editorData.replace(refHeadingRegex, '');
+
+      if (citedReferences.length > 0) {
+        citedReferences.sort((a, b) => {
+          const aLast = a.authors && a.authors.length > 0 ? a.authors[0].name.split(' ').pop().toLowerCase() : '';
+          const bLast = b.authors && b.authors.length > 0 ? b.authors[0].name.split(' ').pop().toLowerCase() : '';
+          return aLast.localeCompare(bLast);
+        });
+
+        const refEntries = citedReferences.map(p => `<p>${generateReferenceEntry(p)}</p>`).join('');
+        const fullRefSection = `<h2>References</h2>${refEntries}`;
+        editorData += '<br><br>' + fullRefSection;
+      }
+
+      editorInstance.setData(editorData);
+    }
+
+    function citePaper(editorInstance, paper) {
+      const authorsCitation = formatAuthorsForCitation(paper.authors);
+      const year = paper.year ? paper.year : 'n.d.';
+      const citationText = `(${authorsCitation}, ${year})`;
+
+      const selection = editorInstance.getSelection();
+      if (selection) {
+        const range = selection.getRanges()[0];
+        if (range) {
+          range.collapse(false);
+          selection.selectRanges([range]);
+          editorInstance.insertHtml(' ' + citationText + ' ');
+        }
+      }
+
+      if (!citedReferences.find(p => p.paperId === paper.paperId)) {
+        citedReferences.push(paper);
+      }
+
+      updateReferencesSection(editorInstance);
+      closeResults();
+    }
+
+    // Add a custom plugin for the save button
+    CKEDITOR.plugins.add('saveDocumentButton', {
+      icons: 'save',
+      init: function(editor) {
+        editor.addCommand('saveDocument', {
+          exec: function(editor) {
+            const currentContent = editor.getData();
+            if (currentDocName) {
+              saveDocument(currentDocName, currentContent);
+            } else {
+              const docName = prompt('Enter a name for this document:');
+              if (docName && docName.trim().length > 0) {
+                currentDocName = docName.trim();
+                saveDocument(currentDocName, currentContent);
+              }
+            }
+            refreshDocumentList(editor);
+          }
+        });
+
+        editor.ui.addButton('SaveDoc', {
+          label: 'Save Document',
+          command: 'saveDocument',
+          toolbar: 'document,10' 
+        });
+      }
+    });
+
+    function closeResults() {
+      const resultsWindow = document.getElementById('resultsWindow');
+      if (resultsWindow) {
+        resultsWindow.style.display = 'none';
+        resultsWindow.innerHTML = '';
+      }
+    }
+
+    function showLoading(resultsWindow, closeResultsId) {
+      resultsWindow.style.display = 'block';
+      resultsWindow.innerHTML = `<span id="${closeResultsId}">[Close]</span><div><span class="loading-spinner"></span>Loading...</div>`;
+      document.getElementById(closeResultsId).addEventListener('click', closeResults);
+    }
+
+    function showError(message, resultsWindow, closeResultsId) {
+      resultsWindow.style.display = 'block';
+      resultsWindow.innerHTML = `<span id="${closeResultsId}">[Close]</span><div class="error">Error: ${message}</div>`;
+      document.getElementById(closeResultsId).addEventListener('click', closeResults);
+    }
+
+    function showResults(data, resultsWindow, closeResultsId, editorInstance) {
+      const papers = data.data;
+      resultsWindow.style.display = 'block';
+      if (!papers || papers.length === 0) {
+        resultsWindow.innerHTML = `<span id="${closeResultsId}">[Close]</span><div>No results found.</div>`;
+        document.getElementById(closeResultsId).addEventListener('click', closeResults);
+        return;
+      }
+
+      let html = `<span id="${closeResultsId}">[Close]</span><h3>Search Results</h3>`;
+      papers.forEach(paper => {
+        const title = paper.title || 'No title';
+        const url = paper.url || '#';
+        const year = paper.year ? `(${paper.year})` : '';
+        const authors = paper.authors && paper.authors.length > 0
+          ? paper.authors.map(a => a.name).join(', ')
+          : 'Unknown Authors';
+
+        html += `
+          <div class="paper-result">
+            <a href="${url}" target="_blank">${title}</a>
+            <div class="paper-meta">${year}</div>
+            <div class="paper-authors">${authors}</div>
+            <div class="cite-button" data-paperid="${paper.paperId}">Cite</div>
+          </div>
+        `;
+      });
+      resultsWindow.innerHTML = html;
+
+      const citeButtons = resultsWindow.querySelectorAll('.cite-button');
+      citeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const paperId = btn.getAttribute('data-paperid');
+          const paper = papers.find(p => p.paperId === paperId);
+          if (paper) {
+            citePaper(editorInstance, paper);
+          }
+        });
+      });
+
+      document.getElementById(closeResultsId).addEventListener('click', closeResults);
+    }
+
+    CKEDITOR.replace('editor', {
+      extraPlugins: 'saveDocumentButton',
+      on: {
+        instanceReady: function() {
+          const editorInstance = this;
+          const searchBtn = document.getElementById('searchBtn');
+          const resultsWindow = document.getElementById('resultsWindow');
+          const closeResultsId = 'closeResults';
+
+          // Replace save button icon with Font Awesome
+          setTimeout(() => {
+            const buttonIconElement = document.querySelector('.cke_button__savedoc_icon');
+            if (buttonIconElement) {
+              buttonIconElement.style.backgroundImage = 'none';
+              buttonIconElement.innerHTML = '';
+            }
+          }, 500);
+
+          refreshDocumentList(editorInstance);
+
+          async function performSearch() {
+            const selection = editorInstance.getSelection();
+            const selectedText = selection ? selection.getSelectedText() : '';
+            if (selectedText.trim().length > 0) {
+              showLoading(resultsWindow, closeResultsId);
+
+              try {
+                const response = await fetch('/search', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ queryString: selectedText })
+                });
+
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                // Detect if response is from Google Scholar
+                if (data.from === 'google') {
+                  const transformedPapers = data.data.map(item => {
+                    const paperId = item.cidCode || item.didCode || Math.random().toString(36).substring(2, 10);
+                    const title = item.title || 'No title';
+                    const url = item.link || '#';
+                    const year = item.year || 'n.d.';
+                    const authorsStr = item.authors || '';
+                    const authors = authorsStr
+                      .split(',')
+                      .map(name => ({ name: name.trim() }))
+                      .filter(a => a.name.length > 0);
+
+                    return {
+                      paperId,
+                      title,
+                      url,
+                      authors,
+                      year
+                    };
+                  });
+
+                  showResults({ data: transformedPapers }, resultsWindow, closeResultsId, editorInstance);
+                } else {
+                  showResults(data['data'], resultsWindow, closeResultsId, editorInstance);
+                }
+              } catch (error) {
+                showError(error.message, resultsWindow, closeResultsId);
+              }
+            }
+          }
+
+          // Enable/disable search button based on selection
+          editorInstance.editable().attachListener(editorInstance.document, 'mouseup', function() {
+            setTimeout(() => {
+              const selection = editorInstance.getSelection();
+              const selectedText = selection ? selection.getSelectedText() : '';
+              if (selectedText.trim().length > 0) {
+                searchBtn.disabled = false;
+              } else {
+                searchBtn.disabled = true;
+                closeResults();
+              }
+            }, 0);
+          });
+
+          // Trigger search on button click
+          searchBtn.addEventListener('click', () => {
+            if (!searchBtn.disabled) {
+              performSearch();
+            }
+          });
+
+          // Trigger search with Ctrl/Cmd+Shift+Y
+          editorInstance.document.on('keydown', function(e) {
+          const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+          const metaKey = isMac ? e.data.$.metaKey : e.data.$.ctrlKey;
+          if (metaKey && e.data.$.key.toLowerCase() === 'j') {
+            e.data.$.preventDefault();
+            if (!searchBtn.disabled) {
+              performSearch();
+            }
+          }
+         });
+
+        }
+      }
+    });
+  </script>
+</body>
+</html>

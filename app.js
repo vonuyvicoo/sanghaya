@@ -88,6 +88,15 @@ async function searchPapers(query) {
 
 
 // GET route - load the editor and insert saved content
+app.get('/app', (req, res) => {
+    let savedContent = '';
+    if (fs.existsSync(FILE_PATH)) {
+        savedContent = fs.readFileSync(FILE_PATH, 'utf8');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'app.html'));
+});
+
+// GET route - load the editor and insert saved content
 app.get('/', (req, res) => {
     let savedContent = '';
     if (fs.existsSync(FILE_PATH)) {
