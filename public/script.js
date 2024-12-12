@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	  }
 	});
   
-	// Load previously saved content from data.html if it exists
+
 	fetch('/data.html')
 	  .then(response => {
 		if (response.status === 200) {
@@ -17,13 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	  })
 	  .then(data => {
-		// Insert HTML into the editor. We can use the built-in pasteHTML (deprecated in Quill 1.x) 
-		// or we insert it using the clipboard module. For simplicity, we can set contents using innerHTML.
+
 		const editor = document.querySelector('.ql-editor');
 		editor.innerHTML = data;
 	  });
   
-	// Handle save button click
+
 	const saveButton = document.getElementById('save-button');
 	saveButton.addEventListener('click', () => {
 	  const htmlContent = document.querySelector('.ql-editor').innerHTML;
